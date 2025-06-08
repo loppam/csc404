@@ -24,7 +24,7 @@ function LoginPage() {
 
     try {
       await signInWithEmailAndPassword(auth, email, password);
-      navigate("/");
+      navigate("/dashboard");
     } catch (error) {
       setError("Failed to login. Please check your credentials.");
       console.error(error);
