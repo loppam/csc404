@@ -140,18 +140,41 @@ const PaymentHistoryPage = () => {
 
   const generateCertificate = (data, serviceType) => {
     const doc = new jsPDF();
+    const margin = 20;
+    const pageWidth = doc.internal.pageSize.getWidth();
+    const pageHeight = doc.internal.pageSize.getHeight();
+
+    // Add border
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(1);
+    doc.rect(margin / 2, margin / 2, pageWidth - margin, pageHeight - margin);
 
     // Add header
-    doc.setFontSize(20);
-    doc.text("E-Gov MIS Portal", 105, 20, { align: "center" });
+    doc.setFontSize(24);
+    doc.setFont("helvetica", "bold");
+    doc.text("FEDERAL REPUBLIC OF NIGERIA", pageWidth / 2, margin + 10, {
+      align: "center",
+    });
 
-    // Add certificate title
-    doc.setFontSize(16);
-    doc.text(`${SERVICES[serviceType].name}`, 105, 40, { align: "center" });
+    // Add sub-header (e-Gov MIS Portal)
+    doc.setFontSize(14);
+    doc.setFont("helvetica", "normal");
+    doc.text("E-GOV MIS PORTAL", pageWidth / 2, margin + 20, {
+      align: "center",
+    });
+
+    // Add certificate title (e.g., CERTIFICATE OF BIRTH)
+    doc.setFontSize(20);
+    doc.setFont("helvetica", "bold");
+    const certificateTitle = `CERTIFICATE OF ${SERVICES[
+      serviceType
+    ].name.toUpperCase()}`;
+    doc.text(certificateTitle, pageWidth / 2, margin + 40, { align: "center" });
 
     // Add content
     doc.setFontSize(12);
-    let y = 60;
+    doc.setFont("helvetica", "normal");
+    let y = margin + 60;
 
     // For birth certificates, add random height and weight if not already present
     if (serviceType === "birth-certificate" && !data.height && !data.weight) {
@@ -161,21 +184,31 @@ const PaymentHistoryPage = () => {
       data.weight = `${weight} kg`;
     }
 
-    // Ensure we iterate over fields defined in SERVICES for correct labels and order
     const serviceFields = SERVICES[serviceType]?.fields || [];
     serviceFields.forEach((field) => {
       const value = data[field.name];
       if (value) {
-        doc.text(`${field.label}: ${value}`, 20, y);
-        y += 10;
+        doc.text(`${field.label}:`, margin + 5, y);
+        doc.text(`${value}`, pageWidth / 2, y); // Align value to the right of the middle
+        y += 8; // Reduce line spacing
       }
     });
 
-    // Add footer
+    // Add a signature line placeholder
+    y += 20; // Add some space before signature
+    doc.line(margin, y, pageWidth - margin, y); // Draw a line for signature
     doc.setFontSize(10);
-    doc.text("This is an electronically generated document", 105, 280, {
-      align: "center",
-    });
+    doc.text("Authorized Signature", pageWidth / 2, y + 5, { align: "center" });
+
+    // Add footer
+    doc.setFontSize(9);
+    doc.setFont("helvetica", "italic");
+    doc.text(
+      "This is an electronically generated document. Any alteration invalidates this certificate.",
+      pageWidth / 2,
+      pageHeight - margin - 5,
+      { align: "center" }
+    );
 
     doc.save(
       `${serviceType}_${
